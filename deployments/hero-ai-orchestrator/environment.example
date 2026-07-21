@@ -9,6 +9,10 @@ LANGSMITH_TENANT_ID_PROD=""
 LANGSMITH_TRACING_PROJECT_ID_PROD=""
 LANGSMITH_URL_PROD="https://smith.langchain.com"
 LANGGRAPH_URL="http://localhost:2024"
+# Generate a separate random secret. COMPLETION_WEBHOOK_URL must be the public
+# backend URL ending in /webhooks/run-complete.
+RUN_COMPLETE_WEBHOOK_SECRET=""
+COMPLETION_WEBHOOK_URL=""
 
 # Coding model
 LLM_MODEL_ID="azure_openai:gpt-5.6-terra"
@@ -30,6 +34,8 @@ GITHUB_WEBHOOK_SECRET=""
 GITHUB_APP_CLIENT_ID=""
 GITHUB_APP_CLIENT_SECRET=""
 GITHUB_OAUTH_PROVIDER_ID=""
+# Set only when a LangSmith Deployment provides this exact secret. Leave it
+# empty for local Developer-plan operation so GitHub App bot-token mode is used.
 X_SERVICE_AUTH_JWT_SECRET=""
 
 # Restrict webhook-triggered work to HERO. Keep the org allowlist empty because

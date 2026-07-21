@@ -43,7 +43,7 @@ DEFAULT_SANDBOX_DELETE_AFTER_STOP_SECONDS="86400"                  # Optional, d
 REPO_SNAPSHOT_BASE_IMAGE="<registry>/<open-swe-sandbox-image>"      # Optional; required for admin-generated repo snapshot templates
 ```
 
-This is useful for pre-installing languages, frameworks, or internal tools that your repos depend on — reducing setup time per agent run. The default snapshot includes the GitHub CLI; agents invoke it as `GH_TOKEN=dummy gh <command>` and rely on the LangSmith proxy for the real credentials.
+This is useful for pre-installing languages, frameworks, or internal tools that your repos depend on — reducing setup time per agent run. The default snapshot includes the GitHub CLI; agents invoke it as `GH_TOKEN="${OPEN_SWE_GITHUB_TOKEN:-dummy}" gh <command>`. LangSmith sandboxes use the `dummy` fallback and rely on their proxy for the real credentials.
 
 `REPO_SNAPSHOT_BASE_IMAGE` should point to the published Docker image used to create your default Open SWE sandbox snapshot (typically the image built from this repository's `Dockerfile`). The admin **Repository Snapshots** page uses it as the base image when generating per-repo Dockerfile templates. If it is not configured, template generation fails closed instead of suggesting a bare image that would be missing Open SWE's required sandbox tools.
 
@@ -68,6 +68,8 @@ Set the `SANDBOX_TYPE` environment variable to switch providers. Each provider h
 | `local` | `agent/integrations/local.py` | None (no isolation — development only), `SANDBOX_TYPE="local"` |
 
 > **Warning**: `local` runs commands directly on your host with no sandboxing. Only use for local development with human-in-the-loop enabled.
+
+In local mode, Open SWE automatically exposes the current short-lived GitHub App installation token to agent commands as `OPEN_SWE_GITHUB_TOKEN`. Do not set this variable yourself or persist the token; it is refreshed by the backend when GitHub issues a new installation token.
 
 For `langsmith`, sandboxes default to the same LangSmith credentials as tracing. To run sandboxes against a **different** LangSmith workspace, set `SANDBOX_LANGSMITH_API_KEY` (falls back to `LANGSMITH_API_KEY` / `LANGSMITH_API_KEY_PROD`) and optionally `SANDBOX_LANGSMITH_ENDPOINT` (falls back to `LANGSMITH_ENDPOINT`). These apply to sandbox create/connect/delete, the GitHub proxy config, and repo snapshot builds — the `DEFAULT_SANDBOX_SNAPSHOT_ID` must exist in whichever workspace these credentials point at.
 
@@ -233,7 +235,7 @@ Routing is applied centrally in `make_model` (`agent/utils/model.py`), which res
 
 ## 3. Tools
 
-Open SWE ships with a small set of custom tools on top of the built-in Deep Agents tools (file operations, shell execution, subagents, todos). GitHub operations are handled by `GH_TOKEN=dummy gh` inside the sandbox.
+Open SWE ships with a small set of custom tools on top of the built-in Deep Agents tools (file operations, shell execution, subagents, todos). GitHub operations are handled by `GH_TOKEN="${OPEN_SWE_GITHUB_TOKEN:-dummy}" gh` inside the sandbox, using either the LangSmith proxy fallback or the local short-lived installation token described above.
 
 | Tool | File | Purpose |
 |---|---|---|

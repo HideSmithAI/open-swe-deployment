@@ -52,7 +52,8 @@ Copy the example and populate secrets locally:
 
 ```bash
 cp deployments/hero-ai-orchestrator/environment.example .env
-openssl rand -hex 32      # GITHUB_WEBHOOK_SECRET and DASHBOARD_JWT_SECRET
+openssl rand -hex 32      # Generate separate GITHUB_WEBHOOK_SECRET,
+                          # DASHBOARD_JWT_SECRET, and RUN_COMPLETE_WEBHOOK_SECRET values
 openssl rand -base64 32   # TOKEN_ENCRYPTION_KEY
 ```
 
@@ -85,12 +86,16 @@ the free, single-repository POC, use the built-in local backend:
 SANDBOX_TYPE="local"
 LOCAL_SANDBOX_ROOT_DIR="./.open-swe-workspaces"
 DEFAULT_SANDBOX_SNAPSHOT_ID=""
+X_SERVICE_AUTH_JWT_SECRET=""
 ```
 
 Local mode runs agent commands directly on this machine. It has no process or
 filesystem isolation, so keep human-in-the-loop enabled, retain the exact HERO
 repository allowlist, and stop the backend/tunnel when testing is complete. Do
-not use this mode for untrusted tasks or a persistent public deployment.
+not use this mode for untrusted tasks or a persistent public deployment. The
+backend automatically makes its short-lived GitHub App installation token
+available to local agent commands; do not create or persist a separate GitHub
+personal access token.
 
 Once the LangSmith workspace has Sandbox access, switch back to
 `SANDBOX_TYPE="langsmith"` and create the documented reference snapshot:

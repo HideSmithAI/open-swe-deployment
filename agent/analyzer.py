@@ -34,6 +34,7 @@ from langchain_core.language_models import BaseChatModel
 
 from .dashboard.team_settings import get_effective_gateway_enabled
 from .integrations.langsmith import _configure_github_proxy
+from .integrations.local import configure_local_sandbox_github_token
 from .middleware import (
     BasePrepareRunMiddleware,
     PrepareRunState,
@@ -70,7 +71,7 @@ STYLE_ANALYZER_MODEL_CALL_LIMIT = 80
 STYLE_ANALYZER_PROMPT = """You are a code-review style analyst for `{repo_owner}/{repo_name}`.
 
 Sandbox: `{working_dir}`. Use the shell (``execute``) to run GitHub commands.
-**Always invoke gh as:** `GH_TOKEN=dummy gh <command>`.
+**Always invoke gh as:** `GH_TOKEN=\"${{OPEN_SWE_GITHUB_TOKEN:-dummy}}\" gh <command>`.
 
 Your job is to produce/refine the per-repo review-style prompt and persist it with
 `save_review_style_prompt`.
@@ -146,6 +147,9 @@ class PrepareAnalyzerRunMiddleware(BasePrepareRunMiddleware):
         if not (isinstance(github_token, str) and github_token):
             github_token = await get_github_app_installation_token()
         if isinstance(github_token, str) and github_token:
+            configure_local_sandbox_github_token(
+                unwrap_sandbox_backend(sandbox_backend), github_token
+            )
             await _configure_sandbox_github_proxy(sandbox_backend, github_token)
         system_prompt = STYLE_ANALYZER_PROMPT.format(
             repo_owner=owner or "<owner>",

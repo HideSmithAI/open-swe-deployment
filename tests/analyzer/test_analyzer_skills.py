@@ -4,6 +4,7 @@ import pathlib
 
 from deepagents.middleware.skills import _parse_skill_metadata
 
+from agent.analyzer import STYLE_ANALYZER_PROMPT
 from agent.dashboard.review_style_jobs import (
     build_continual_run_configurable,
     build_continual_run_input,
@@ -33,6 +34,19 @@ def test_skill_path_for_mode() -> None:
     assert skill_path_for_mode("continual") == "/skills/continual-learning/SKILL.md"
     # Unknown modes fall back to bootstrap.
     assert skill_path_for_mode("whatever") == "/skills/bootstrap-repo-analysis/SKILL.md"
+
+
+def test_style_analyzer_prompt_preserves_shell_parameter_expansion() -> None:
+    rendered = STYLE_ANALYZER_PROMPT.format(
+        repo_owner="owner",
+        repo_name="repo",
+        working_dir="/workspace",
+        mode="bootstrap",
+        skill_path="/skills/bootstrap-repo-analysis/SKILL.md",
+        reviewer_themes="themes",
+    )
+
+    assert 'GH_TOKEN="${OPEN_SWE_GITHUB_TOKEN:-dummy}" gh' in rendered
 
 
 def test_bundled_skill_md_parse() -> None:
