@@ -1,44 +1,46 @@
 # HERO AI Orchestrator deployment
 
-This directory records the deployment-specific configuration for running this
-Open SWE fork against the private `HideSmithAI/hero-ai-orchestrator` repository.
-Keep the Open SWE runtime in this repository; do not vendor it into HERO.
+This directory records only the HERO-specific differences from the canonical
+[installation guide](../../docs/INSTALLATION.md). Keep the Open SWE runtime in
+this repository; do not vendor it into HERO.
 
 ## 1. GitHub App
 
-Create a GitHub App and install it only on
-`HideSmithAI/hero-ai-orchestrator`. Configure the webhook URL as:
+Follow the installation guide to create a GitHub App, with these HERO-specific
+settings:
+
+- App owner: `HideSmithAI`
+- Installation access: only `HideSmithAI/hero-ai-orchestrator`
+- OAuth provider ID: `hidesmithai-open-swe`
+- Request user authorization during installation: enabled
+- Production webhook URL: `https://<backend>/webhooks/github`
+- Local webhook URL: `https://<ngrok-host>/webhooks/github`
+- LangSmith OAuth callback:
+  `https://smith.langchain.com/host-oauth-callback/hidesmithai-open-swe`
+- Local dashboard callback:
+  `http://localhost:2024/dashboard/api/auth/callback`
+- Production dashboard callback:
+  `https://<dashboard-api>/dashboard/api/auth/callback`
+
+Use the canonical permission and event lists from the installation guide. For
+this deployment, do not grant Workflows write permission initially. HERO's
+`AGENTS.md` prevents workflow edits unless a task explicitly requests them;
+grant that permission later only when such work is intentionally delegated.
+
+The repository installation is the hard access limit. The environment example
+also sets only the exact repository allowlist. It deliberately leaves
+`ALLOWED_GITHUB_ORGS` empty because Open SWE treats the organization and
+repository allowlists as alternatives, not cumulative restrictions.
+
+Keep the dashboard on a private network or behind an access proxy. With
+`ALLOWED_GITHUB_ORGS` empty, Open SWE does not apply an organization-membership
+gate to dashboard login; `CONFIGURED_ADMINS` still limits admin endpoints.
+
+The webhook endpoint is:
 
 ```text
 https://<open-swe-backend>/webhooks/github
 ```
-
-Repository permissions:
-
-- Contents: read and write
-- Pull requests: read and write
-- Issues: read and write
-- Checks: read and write
-- Actions: read-only
-- Metadata: read-only
-
-Organization permissions:
-
-- Members: read-only, because `ALLOWED_GITHUB_ORGS` gates dashboard login
-
-Do not grant Workflows write permission initially. HERO's `AGENTS.md` prevents
-workflow edits unless a task explicitly requests them; grant the permission
-later only when such work is intentionally delegated.
-
-Subscribe to these events:
-
-- Issue comment
-- Pull request
-- Pull request review
-- Pull request review comment
-- Check run
-- Check suite
-- Workflow run
 
 Subscribe to `Issues` only if mentioning `@openswe` in a newly created Issue
 should trigger immediately. The recommended workflow is an explicit
@@ -54,11 +56,22 @@ openssl rand -hex 32      # GITHUB_WEBHOOK_SECRET and DASHBOARD_JWT_SECRET
 openssl rand -base64 32   # TOKEN_ENCRYPTION_KEY
 ```
 
-Create a LangSmith sandbox snapshot from the repository Docker image and put
-its UUID in `DEFAULT_SANDBOX_SNAPSHOT_ID`. The snapshot already includes
-Python, uv, git, GitHub CLI, ripgrep, and build tools needed by HERO.
+For a first deployment, create the documented reference snapshot:
+
+```bash
+uv run python scripts/create_sandbox_snapshot.py \
+  --name hero-open-swe \
+  --image johanneslangchain/open-swe-sandbox:gh-cli-amd64
+```
+
+Put the printed UUID in `DEFAULT_SANDBOX_SNAPSHOT_ID`. Before production, build
+the checked-in `Dockerfile` under a registry controlled by HideSmithAI and
+create a replacement snapshot from that pinned image.
 
 ## 3. Start the backend and dashboard
+
+For local verification, follow the installation guide to expose port 2024 with
+ngrok, then run:
 
 ```bash
 make install
@@ -78,7 +91,31 @@ Add the `imcaptor` GitHub login under **Admin -> User mappings**. Enable
 **Always Create PRs** for the profile so every code change is delivered as a
 draft pull request.
 
-## 4. Verify the integration
+## 4. Deploy continuously
+
+For asynchronous operation, do not leave the backend on a developer laptop.
+Follow the installation guide's production section and connect
+`HideSmithAI/open-swe-deployment` to LangGraph Platform. Configure the values
+from `environment.example` in the deployment, then update these values to the
+public HTTPS endpoints:
+
+```text
+LANGGRAPH_URL=https://<backend>
+DASHBOARD_API_BASE_URL=https://<dashboard-api>
+DASHBOARD_BASE_URL=https://<dashboard>
+DASHBOARD_ALLOWED_ORIGINS=https://<dashboard>
+```
+
+Update the GitHub App webhook and production OAuth callback to the same public
+backend URL. Deploy the optional `ui/` dashboard separately as described in
+the installation guide. The backend health check must return success before
+enabling the webhook:
+
+```bash
+curl --fail --silent https://<backend>/health
+```
+
+## 5. Verify the integration
 
 Start with a read-only comment on a HERO Issue:
 
@@ -93,4 +130,3 @@ identifies `.venv/bin/pytest -q`.
 Then use a small documentation task to verify branch creation, tests, push,
 and draft PR creation. Keep `ready-for-agent` as a human triage signal; it does
 not trigger work without an explicit `@openswe` request.
-

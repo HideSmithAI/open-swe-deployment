@@ -26,9 +26,9 @@ GITHUB_APP_CLIENT_SECRET=""
 GITHUB_OAUTH_PROVIDER_ID=""
 X_SERVICE_AUTH_JWT_SECRET=""
 
-# Restrict this deployment to HERO. The org allowlist also gates dashboard
-# login and therefore requires Organization Members: read-only on the App.
-ALLOWED_GITHUB_ORGS="HideSmithAI"
+# Restrict webhook-triggered work to HERO. Keep the org allowlist empty because
+# Open SWE combines organization and repository allowlists with OR semantics.
+ALLOWED_GITHUB_ORGS=""
 ALLOWED_GITHUB_REPOS="HideSmithAI/hero-ai-orchestrator"
 DEFAULT_REPO_OWNER="HideSmithAI"
 DEFAULT_REPO_NAME="hero-ai-orchestrator"
@@ -50,4 +50,3 @@ DEFAULT_SANDBOX_DELETE_AFTER_STOP_SECONDS="86400"
 
 # Encrypt stored OAuth tokens. Generate with: openssl rand -base64 32
 TOKEN_ENCRYPTION_KEY=""
-
