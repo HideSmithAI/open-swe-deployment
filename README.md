@@ -148,6 +148,7 @@ This is an area where you can extend Open SWE for your org: add deterministic CI
 
 - **[Installation Guide](docs/INSTALLATION.md)** — local dev (backend + dashboard), GitHub App creation, LangSmith, Linear/Slack/GitHub triggers, and production deployment
 - **[Customization Guide](docs/CUSTOMIZATION.md)** — swap the sandbox, model, tools, triggers, system prompt, and middleware for your org
+- **[HERO deployment](deployments/hero-ai-orchestrator/README.md)** — configuration and verification for `HideSmithAI/hero-ai-orchestrator`
 
 ## License
 
