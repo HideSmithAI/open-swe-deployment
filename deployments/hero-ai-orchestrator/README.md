@@ -56,6 +56,27 @@ openssl rand -hex 32      # GITHUB_WEBHOOK_SECRET and DASHBOARD_JWT_SECRET
 openssl rand -base64 32   # TOKEN_ENCRYPTION_KEY
 ```
 
+This deployment uses the Azure AI Foundry deployment `gpt-5.6-terra` through
+its Azure OpenAI-compatible endpoint. The model settings are already recorded
+in `environment.example`. Export either `AZURE_OPENAI_API_KEY` or the supported
+`AZURE_API_KEY` alias before starting Open SWE; never copy the key into the
+repository. Azure deployments are registered in Open SWE's runtime model
+catalog from `LLM_MODEL_ID`, making this deployment the default for the agent,
+subagents, reviewer, analyzer, and dashboard.
+
+Team, profile, and thread model selections take precedence over that default.
+On a reused deployment, clear those persisted overrides or select
+`Azure GPT-5.6 Terra` in each configured team/profile before enabling the
+webhook. A fresh local deployment has no persisted overrides.
+
+If `AZURE_API_KEY` is assigned in `.zshrc` without the `export` keyword, expose
+it to the backend process after sourcing the file:
+
+```bash
+source ~/.zshrc
+export AZURE_API_KEY
+```
+
 The current `Personal` Developer workspace does not have LangSmith Sandbox
 access (the API returns `403` and the Sandboxes page requires an upgrade). For
 the free, single-repository POC, use the built-in local backend:

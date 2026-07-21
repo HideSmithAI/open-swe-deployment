@@ -86,7 +86,22 @@ class ModelKwargs(TypedDict, total=False):
     model_kwargs: dict[str, object] | None
 
 
+class AzureOpenAISettings(TypedDict):
+    api_key: str | None
+    azure_endpoint: str | None
+    api_version: str | None
+
+
 _ANTHROPIC_EFFORTS: set[AnthropicEffort] = {"low", "medium", "high", "xhigh", "max"}
+
+
+def azure_openai_settings() -> AzureOpenAISettings:
+    return {
+        "api_key": os.environ.get("AZURE_OPENAI_API_KEY") or os.environ.get("AZURE_API_KEY"),
+        "azure_endpoint": os.environ.get("AZURE_OPENAI_ENDPOINT"),
+        "api_version": os.environ.get("OPENAI_API_VERSION")
+        or os.environ.get("AZURE_OPENAI_API_VERSION"),
+    }
 
 
 def _coerce_openai_chat_completions_kwargs(model_kwargs: dict[str, object]) -> None:
@@ -121,6 +136,11 @@ def make_model(model_id: str, *, use_gateway: bool | None = None, **kwargs: Unpa
     """
     model_kwargs: dict[str, object] = dict(kwargs)
     model_kwargs.setdefault("max_retries", DEFAULT_MAX_RETRIES)
+
+    if model_id.startswith("azure_openai:"):
+        for name, value in azure_openai_settings().items():
+            if value:
+                model_kwargs.setdefault(name, value)
 
     if model_id.startswith("openai:"):
         # Direct-provider default: Responses API over the OpenAI websocket base.
@@ -300,6 +320,19 @@ def validate_local_dev_llm_config() -> None:
 
     if model_id.startswith("openai:") and not os.environ.get("OPENAI_API_KEY"):
         raise ValueError(f"OPENAI_API_KEY is required for configured model {model_id}")
+    elif model_id.startswith("azure_openai:"):
+        settings = azure_openai_settings()
+        if not settings["api_key"]:
+            raise ValueError(
+                f"AZURE_OPENAI_API_KEY or AZURE_API_KEY is required for configured model {model_id}"
+            )
+        if not settings["azure_endpoint"]:
+            raise ValueError(f"AZURE_OPENAI_ENDPOINT is required for configured model {model_id}")
+        if not settings["api_version"]:
+            raise ValueError(
+                "OPENAI_API_VERSION or AZURE_OPENAI_API_VERSION is required "
+                f"for configured model {model_id}"
+            )
     elif model_id.startswith("anthropic:") and not os.environ.get("ANTHROPIC_API_KEY"):
         raise ValueError(f"ANTHROPIC_API_KEY is required for configured model {model_id}")
     elif model_id.startswith("google_genai:") and not os.environ.get("GOOGLE_API_KEY"):

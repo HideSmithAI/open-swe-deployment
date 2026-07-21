@@ -163,6 +163,22 @@ model=make_model("openai:gpt-5.6-sol", max_tokens=128_000, reasoning={"effort": 
 model=make_model("google_genai:gemini-2.5-pro", temperature=0, max_tokens=16_000)
 ```
 
+Azure OpenAI-compatible deployments managed in Azure AI Foundry can be
+selected with the `azure_openai` provider. Because deployment names are
+tenant-specific, setting `LLM_MODEL_ID` registers that deployment in the
+runtime dashboard model catalog:
+
+```bash
+LLM_MODEL_ID="azure_openai:my-deployment"
+AZURE_OPENAI_MODEL_NAME="gpt-5.6-terra"  # underlying model; used for display/capabilities
+AZURE_OPENAI_ENDPOINT="https://my-resource.cognitiveservices.azure.com/"
+OPENAI_API_VERSION="2024-12-01-preview"
+AZURE_OPENAI_API_KEY="..."               # AZURE_API_KEY is also accepted
+```
+
+Azure deployments use Chat Completions and default to `none` reasoning effort,
+because accepted reasoning parameters vary by deployed model and API version.
+
 The `make_model()` helper in `agent/utils/model.py` wraps `langchain.chat_models.init_chat_model`. For OpenAI models, it automatically enables the Responses API. For full control, pass a pre-configured model instance directly:
 
 ```python
