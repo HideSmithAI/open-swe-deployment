@@ -1,0 +1,69 @@
+# Copy this file to the repository root as .env for local development.
+# Never commit the populated .env file or private keys.
+
+# LangSmith / LangGraph
+LANGSMITH_API_KEY_PROD=""
+LANGCHAIN_TRACING_V2="true"
+LANGCHAIN_PROJECT="open-swe-agent"
+LANGSMITH_TENANT_ID_PROD=""
+LANGSMITH_TRACING_PROJECT_ID_PROD=""
+LANGSMITH_URL_PROD="https://smith.langchain.com"
+LANGGRAPH_URL="http://localhost:2024"
+# Generate a separate random secret. COMPLETION_WEBHOOK_URL must be the public
+# backend URL ending in /webhooks/run-complete.
+RUN_COMPLETE_WEBHOOK_SECRET=""
+COMPLETION_WEBHOOK_URL=""
+
+# Coding model
+LLM_MODEL_ID="azure_openai:gpt-5.6-terra"
+AZURE_OPENAI_MODEL_NAME="gpt-5.6-terra"
+AZURE_OPENAI_ENDPOINT="https://wangh-mbgbv9bi-westus3.cognitiveservices.azure.com/"
+OPENAI_API_VERSION="2024-12-01-preview"
+# Standard name: AZURE_OPENAI_API_KEY. This deployment also accepts the
+# existing AZURE_API_KEY alias used in the operator's shell environment.
+AZURE_OPENAI_API_KEY=""
+AZURE_API_KEY=""
+
+# GitHub App
+GITHUB_APP_ID=""
+GITHUB_APP_PRIVATE_KEY=""
+GITHUB_APP_INSTALLATION_ID=""
+GITHUB_WEBHOOK_SECRET=""
+
+# Dashboard GitHub OAuth
+GITHUB_APP_CLIENT_ID=""
+GITHUB_APP_CLIENT_SECRET=""
+GITHUB_OAUTH_PROVIDER_ID=""
+# Set only when a LangSmith Deployment provides this exact secret. Leave it
+# empty for local Developer-plan operation so GitHub App bot-token mode is used.
+X_SERVICE_AUTH_JWT_SECRET=""
+
+# Restrict webhook-triggered work to HERO. Keep the org allowlist empty because
+# Open SWE combines organization and repository allowlists with OR semantics.
+ALLOWED_GITHUB_ORGS=""
+ALLOWED_GITHUB_REPOS="HideSmithAI/hero-ai-orchestrator"
+DEFAULT_REPO_OWNER="HideSmithAI"
+DEFAULT_REPO_NAME="hero-ai-orchestrator"
+CONFIGURED_ADMINS="imcaptor"
+
+# Dashboard URLs: replace with public HTTPS URLs in production.
+DASHBOARD_API_BASE_URL="http://localhost:2024"
+DASHBOARD_BASE_URL="http://localhost:3000"
+DASHBOARD_ALLOWED_ORIGINS="http://localhost:3000"
+DASHBOARD_JWT_SECRET=""
+
+# Isolated execution
+# Production/default: LangSmith sandbox. The Personal Developer plan currently
+# cannot create sandboxes. For the local POC only, set SANDBOX_TYPE="local" and
+# LOCAL_SANDBOX_ROOT_DIR="./.open-swe-workspaces". Local mode has no process or
+# filesystem isolation and must not be exposed to untrusted repositories/tasks.
+SANDBOX_TYPE="langsmith"
+LOCAL_SANDBOX_ROOT_DIR="./.open-swe-workspaces"
+DEFAULT_SANDBOX_SNAPSHOT_ID=""
+DEFAULT_SANDBOX_VCPUS="4"
+DEFAULT_SANDBOX_MEM_BYTES="16106127360"
+DEFAULT_SANDBOX_IDLE_TTL_SECONDS="7200"
+DEFAULT_SANDBOX_DELETE_AFTER_STOP_SECONDS="86400"
+
+# Encrypt stored OAuth tokens. Generate with: openssl rand -base64 32
+TOKEN_ENCRYPTION_KEY=""

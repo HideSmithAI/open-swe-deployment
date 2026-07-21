@@ -93,7 +93,7 @@ def test_build_github_issue_prompt_includes_issue_context() -> None:
     assert "https://github.com/langchain-ai/open-swe/issues/42" in prompt
     assert "PR description links back to this issue" in prompt
     assert "repository's PR conventions" in prompt
-    assert "GH_TOKEN=dummy gh issue comment" in prompt
+    assert "GH_TOKEN=\"${OPEN_SWE_GITHUB_TOKEN:-dummy}\" gh issue comment" in prompt
 
 
 def test_build_github_issue_followup_prompt_only_includes_comment() -> None:

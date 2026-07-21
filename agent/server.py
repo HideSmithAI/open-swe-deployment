@@ -431,6 +431,12 @@ async def ensure_sandbox_for_thread(
     lose their ``--global`` config, and Vercel preview deploys reject commits
     whose author email can't be resolved to a GitHub account.
     """
+    local_token: str | None = None
+    if os.getenv("SANDBOX_TYPE", "langsmith") == "local":
+        local_token, _expires_at, _permissions = await _resolve_proxy_token(github_proxy_token)
+        if not local_token:
+            raise ValueError("Cannot authenticate local sandbox: GitHub token is unavailable")
+
     sandbox_backend = SANDBOX_BACKENDS.get(thread_id)
     if sandbox_backend is not None and not sandbox_backend.has_backend:
         sandbox_backend = None
@@ -478,6 +484,11 @@ async def ensure_sandbox_for_thread(
                 )
 
     sandbox_backend = set_sandbox_backend(thread_id, sandbox_backend)
+
+    if local_token:
+        from .integrations.local import configure_local_sandbox_github_token
+
+        configure_local_sandbox_github_token(unwrap_sandbox_backend(sandbox_backend), local_token)
 
     if sandbox_id != sandbox_backend.id:
         await client.threads.update(

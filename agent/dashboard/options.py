@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from collections.abc import Callable, Mapping, Sequence
 from functools import cache, lru_cache
 from importlib import import_module
@@ -97,7 +98,69 @@ SUPPORTED_MODELS: list[ModelOption] = [
     },
 ]
 
+
+def azure_model_option(
+    model_id: str | None,
+    *,
+    base_model: str | None = None,
+) -> ModelOption | None:
+    """Build the runtime Azure OpenAI option configured by ``LLM_MODEL_ID``.
+
+    Azure deployment names are tenant-specific, so they cannot live in the
+    static model catalog. When the deployment wraps a model already in the
+    catalog, reuse its display label and image capability. Reasoning effort is
+    intentionally fixed to ``none`` because Azure deployments differ in which
+    Chat Completions reasoning parameters they accept.
+    """
+    if not isinstance(model_id, str) or not model_id.startswith("azure_openai:"):
+        return None
+    deployment = model_id.partition(":")[2].strip()
+    if not deployment:
+        return None
+    underlying_model = (
+        base_model or os.environ.get("AZURE_OPENAI_MODEL_NAME") or deployment
+    ).strip()
+    known_model = next(
+        (option for option in SUPPORTED_MODELS if option["id"] == f"openai:{underlying_model}"),
+        None,
+    )
+    label = known_model["label"] if known_model is not None else underlying_model
+    return {
+        "id": model_id,
+        "label": f"Azure {label}",
+        "efforts": ["none"],
+        "default_effort": "none",
+        "supports_images": known_model["supports_images"] if known_model is not None else False,
+    }
+
+
+_ENV_MODEL_ID = os.environ.get("LLM_MODEL_ID", "").strip()
+_AZURE_MODEL_OPTION = azure_model_option(_ENV_MODEL_ID)
+if _AZURE_MODEL_OPTION is not None:
+    SUPPORTED_MODELS.append(_AZURE_MODEL_OPTION)
+
 SUPPORTED_MODEL_IDS: frozenset[str] = frozenset(m["id"] for m in SUPPORTED_MODELS)
+
+
+def resolve_default_model_id(
+    configured_model_id: str | None,
+    supported_model_ids: frozenset[str],
+    *,
+    fallback: str,
+) -> str:
+    """Use the tenant-specific Azure deployment registered at startup."""
+    configured = (configured_model_id or "").strip()
+    if configured.startswith("azure_openai:") and configured in supported_model_ids:
+        return configured
+    return fallback
+
+
+DEFAULT_MODEL_ID: str = resolve_default_model_id(
+    _ENV_MODEL_ID,
+    SUPPORTED_MODEL_IDS,
+    fallback="openai:gpt-5.5",
+)
+DEFAULT_MODEL_EFFORT: str = "none" if DEFAULT_MODEL_ID.startswith("azure_openai:") else "medium"
 
 FABLE_MODEL_IDS: frozenset[str] = frozenset(
     m["id"] for m in SUPPORTED_MODELS if m["id"].startswith("anthropic:claude-fable")
@@ -183,10 +246,6 @@ def gate_fable_model(
     if not fable_enabled and isinstance(model_id, str) and model_id in FABLE_MODEL_IDS:
         return fable_disabled_fallback(effort)
     return model_id, effort
-
-
-DEFAULT_MODEL_ID: str = "openai:gpt-5.5"
-DEFAULT_MODEL_EFFORT: str = "medium"
 
 
 def model_supports_effort(model_id: str, effort: str) -> bool:

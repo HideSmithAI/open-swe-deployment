@@ -64,21 +64,21 @@ def _prep_command(
         f"if [ -d {q_repo_dir}/.git ]; then",
         # Tolerate fetch-all failures: the targeted head/base fetches below
         # are what the checkout actually needs.
-        f"  cd {q_repo_dir} && {{ GH_TOKEN=dummy git fetch --all --quiet || true; }}",
+        f"  cd {q_repo_dir} && {{ GH_TOKEN=\"${{OPEN_SWE_GITHUB_TOKEN:-dummy}}\" git fetch --all --quiet || true; }}",
         "else",
-        f"  cd {q_work_dir} && GH_TOKEN=dummy gh repo clone {q_full_name} && cd {q_repo_name}",
+        f"  cd {q_work_dir} && GH_TOKEN=\"${{OPEN_SWE_GITHUB_TOKEN:-dummy}}\" gh repo clone {q_full_name} && cd {q_repo_name}",
         "fi",
     ]
     if base_sha:
         q_base = shlex.quote(base_sha)
-        lines.append(f"GH_TOKEN=dummy git fetch origin {q_base} --quiet 2>/dev/null || true")
+        lines.append(f"GH_TOKEN=\"${{OPEN_SWE_GITHUB_TOKEN:-dummy}}\" git fetch origin {q_base} --quiet 2>/dev/null || true")
     if q_head:
         # Direct sha fetch covers same-repo PRs; the pull ref covers fork PRs
         # whose head commit is not reachable from origin's branches.
-        lines.append(f"GH_TOKEN=dummy git fetch origin {q_head} --quiet 2>/dev/null || true")
+        lines.append(f"GH_TOKEN=\"${{OPEN_SWE_GITHUB_TOKEN:-dummy}}\" git fetch origin {q_head} --quiet 2>/dev/null || true")
         if pr_number is not None:
             pull_ref = shlex.quote(f"refs/pull/{pr_number}/head")
-            lines.append(f"GH_TOKEN=dummy git fetch origin {pull_ref} --quiet 2>/dev/null || true")
+            lines.append(f"GH_TOKEN=\"${{OPEN_SWE_GITHUB_TOKEN:-dummy}}\" git fetch origin {pull_ref} --quiet 2>/dev/null || true")
         # --force: a reused sandbox can have a dirty worktree from a previous
         # run, which would otherwise block the checkout and silently leave the
         # tree at the old head. Strict on purpose: a failed checkout must fail
@@ -250,7 +250,7 @@ async def prepare_main_agent_repo_skills(
         f"  git remote set-url origin {q_canonical_url}",
         "else",
         f"  cd {q_work_dir}",
-        f"  GH_TOKEN=dummy gh repo clone {q_full_name} {q_repo_name} -- --quiet",
+        f"  GH_TOKEN=\"${{OPEN_SWE_GITHUB_TOKEN:-dummy}}\" gh repo clone {q_full_name} {q_repo_name} -- --quiet",
         f"  cd {q_repo_dir}",
         "fi",
     ]
@@ -258,14 +258,14 @@ async def prepare_main_agent_repo_skills(
         q_base_sha = shlex.quote(base_sha)
         lines.extend(
             [
-                f"GH_TOKEN=dummy git fetch origin {q_base_sha} --quiet",
+                f"GH_TOKEN=\"${{OPEN_SWE_GITHUB_TOKEN:-dummy}}\" git fetch origin {q_base_sha} --quiet",
                 f"trusted_ref=$(git rev-parse --verify {q_base_sha}^{{commit}})",
             ]
         )
     else:
         lines.extend(
             [
-                "GH_TOKEN=dummy git fetch origin HEAD --quiet",
+                "GH_TOKEN=\"${OPEN_SWE_GITHUB_TOKEN:-dummy}\" git fetch origin HEAD --quiet",
                 "trusted_ref=$(git rev-parse --verify FETCH_HEAD^{commit})",
             ]
         )

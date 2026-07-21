@@ -53,6 +53,9 @@ credentials.json
 # LangGraph API
 .langgraph_api
 
+# Local Open SWE worktrees (SANDBOX_TYPE=local; development only)
+.open-swe-workspaces/
+
 **/.claude/settings.local.json
 
 # Test traces
@@ -69,4 +72,4 @@ __pycache__/
 *.egg-info/
 .eggs/
 
-# 
+#
