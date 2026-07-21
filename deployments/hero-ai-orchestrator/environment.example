@@ -41,7 +41,12 @@ DASHBOARD_ALLOWED_ORIGINS="http://localhost:3000"
 DASHBOARD_JWT_SECRET=""
 
 # Isolated execution
+# Production/default: LangSmith sandbox. The Personal Developer plan currently
+# cannot create sandboxes. For the local POC only, set SANDBOX_TYPE="local" and
+# LOCAL_SANDBOX_ROOT_DIR="./.open-swe-workspaces". Local mode has no process or
+# filesystem isolation and must not be exposed to untrusted repositories/tasks.
 SANDBOX_TYPE="langsmith"
+LOCAL_SANDBOX_ROOT_DIR="./.open-swe-workspaces"
 DEFAULT_SANDBOX_SNAPSHOT_ID=""
 DEFAULT_SANDBOX_VCPUS="4"
 DEFAULT_SANDBOX_MEM_BYTES="16106127360"

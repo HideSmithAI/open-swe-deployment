@@ -56,7 +56,23 @@ openssl rand -hex 32      # GITHUB_WEBHOOK_SECRET and DASHBOARD_JWT_SECRET
 openssl rand -base64 32   # TOKEN_ENCRYPTION_KEY
 ```
 
-For a first deployment, create the documented reference snapshot:
+The current `Personal` Developer workspace does not have LangSmith Sandbox
+access (the API returns `403` and the Sandboxes page requires an upgrade). For
+the free, single-repository POC, use the built-in local backend:
+
+```dotenv
+SANDBOX_TYPE="local"
+LOCAL_SANDBOX_ROOT_DIR="./.open-swe-workspaces"
+DEFAULT_SANDBOX_SNAPSHOT_ID=""
+```
+
+Local mode runs agent commands directly on this machine. It has no process or
+filesystem isolation, so keep human-in-the-loop enabled, retain the exact HERO
+repository allowlist, and stop the backend/tunnel when testing is complete. Do
+not use this mode for untrusted tasks or a persistent public deployment.
+
+Once the LangSmith workspace has Sandbox access, switch back to
+`SANDBOX_TYPE="langsmith"` and create the documented reference snapshot:
 
 ```bash
 uv run python scripts/create_sandbox_snapshot.py \
